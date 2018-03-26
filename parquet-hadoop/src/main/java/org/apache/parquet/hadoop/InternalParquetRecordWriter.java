@@ -101,6 +101,16 @@ class InternalParquetRecordWriter<T> {
     return parquetFileWriter.getFooter();
   }
 
+  // Allows the user to force a flush operation.
+  // Returns the position of the
+  public long forceFlush() throws IOException {
+    flushRowGroupToStore();
+    initStore();
+    recordCountForNextMemCheck = min(max(MINIMUM_RECORD_COUNT_FOR_CHECK, recordCount / 2), MAXIMUM_RECORD_COUNT_FOR_CHECK);
+    this.lastRowGroupEndPos = parquetFileWriter.getPos();
+    return this.lastRowGroupEndPos;
+  }
+
   private void initStore() {
     pageStore = new ColumnChunkPageWriteStore(compressor, schema, props.getAllocator());
     columnStore = props.newColumnWriteStore(schema, pageStore);
